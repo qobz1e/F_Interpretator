@@ -89,7 +89,7 @@ namespace F_Interpretator
                 return new Token(TokenType.Identifier, prevToken?.literal?.ToString() ?? string.Empty);
 
             }
-            else if (char.IsDigit(currentChar) || (currentChar == '-' && char.IsDigit(nextChar)))
+            else if (char.IsDigit(currentChar) || (currentChar == '-' && char.IsDigit(nextChar)) || (currentChar == '.' && char.IsDigit(nextChar)))
             {
                 return MakeLiteral();
             }
@@ -115,10 +115,10 @@ namespace F_Interpretator
                     break;
 
                 case "true":
-                    tokenType = TokenType.True;
+                    tokenType = TokenType.Boolean;
                     break;
                 case "false":
-                    tokenType = TokenType.False;
+                    tokenType = TokenType.Boolean;
                     break;
 
                 case "equal":

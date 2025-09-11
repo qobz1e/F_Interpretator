@@ -1,0 +1,2 @@
+(setq x '(divide .17 73.1))
+(eval x)

@@ -20,7 +20,7 @@ namespace F_Interpretator
                 _ => literal?.ToString() ?? "null"
             };
 
-            return string.Format("Token {{ type: {0}, literal: \"{1}\" }}, ", tokenType, formattedLiteral);
+            return string.Format("Token {{ type: {0}, literal: \"{1}\" }}", tokenType, formattedLiteral);
         }
     }
 
