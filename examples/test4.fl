@@ -1,0 +1,4 @@
+(setq x 5)
+(setq y plus)
+x 
+y

@@ -1,0 +1,6 @@
+((lambda (x) (plus x 10)) 7)
+((lambda (x)
+    (cond (less x 0) 
+        plus minus
+    ) 1 1 2
+)

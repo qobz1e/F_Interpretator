@@ -1,0 +1,3 @@
+(quote (plus 1 2))
+(setq x '(plus 3 4))
+x

@@ -1,0 +1,2 @@
+(cond (less 1 2) 1 2)
+(cond false 10)

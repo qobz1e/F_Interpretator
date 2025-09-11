@@ -1,0 +1,2 @@
+(plus 2 3)
+(plus (plus 1 2) 3)

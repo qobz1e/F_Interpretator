@@ -1,0 +1,2 @@
+(and (less 1 2) true)
+(not (or (less 3 2) false))

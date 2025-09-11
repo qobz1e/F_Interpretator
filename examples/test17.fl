@@ -1,0 +1,6 @@
+(func newFunc (x)
+	(return x)
+	(plus x 5)
+	x
+)
+(newFunc 5)

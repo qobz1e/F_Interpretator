@@ -1,0 +1,4 @@
+(func Perimeter (x y)
+	(times (plus x y) 2 ))
+(Perimeter 3 4)
+(Perimeter 7 5)

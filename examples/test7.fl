@@ -1,0 +1,2 @@
+(lesseq 2 (minus 3 1))
+(less (times 2 4) (plus 5 2))

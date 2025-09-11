@@ -1,0 +1,5 @@
+(setq x 5)
+(while true 
+	(plus x 1)
+	(cond (greatereq x 10) (x break))
+)

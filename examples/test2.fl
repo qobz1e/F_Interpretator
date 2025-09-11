@@ -1,0 +1,2 @@
+(minus (times 2 3) 4)
+(times 5 (minus 1 3))
