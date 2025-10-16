@@ -47,9 +47,9 @@ namespace F_Interpretator
         xor_Token,
         not_Token,
 
-        listhead_Token,
-        listtail_Token,
-        listcons_Token,
+        head_Token,
+        tail_Token,
+        cons_Token,
 
         eval_Token,
         quote_Token,

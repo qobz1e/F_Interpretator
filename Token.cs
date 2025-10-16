@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace F_Interpretator
 {
@@ -14,8 +11,6 @@ namespace F_Interpretator
             string formattedLiteral = literal switch
             {
                 double d => d.ToString(CultureInfo.InvariantCulture),
-                float f => f.ToString(CultureInfo.InvariantCulture),
-                decimal m => m.ToString(CultureInfo.InvariantCulture),
                 int i => i.ToString(CultureInfo.InvariantCulture),
                 _ => literal?.ToString() ?? "null"
             };

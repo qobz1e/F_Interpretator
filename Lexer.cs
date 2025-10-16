@@ -2,7 +2,7 @@
 
 namespace F_Interpretator
 {
-        public class Lexer
+    public class Lexer
     {
         public List<Token> tokens { get; set; }
         public string source_string { get; }
@@ -30,7 +30,7 @@ namespace F_Interpretator
                 Next();
             }
         }
-        
+
         public void Next()
         {
             pos++;
@@ -173,13 +173,13 @@ namespace F_Interpretator
                     break;
 
                 case "head":
-                    tokenType = TokenType.listhead_Token;
+                    tokenType = TokenType.head_Token;
                     break;
                 case "tail":
-                    tokenType = TokenType.listtail_Token;
+                    tokenType = TokenType.tail_Token;
                     break;
                 case "cons":
-                    tokenType = TokenType.listcons_Token;
+                    tokenType = TokenType.cons_Token;
                     break;
 
                 case "eval":
@@ -238,6 +238,10 @@ namespace F_Interpretator
                 }
                 Next();
             }
+            if (curChar == '.')
+            {
+                dots++;
+            }
             if (dots > 1) throw new FormatException("Invalid number format");
             var numValue = source_string.Substring(currentPos, pos - currentPos + 1);
             if (dots == 1)
@@ -248,7 +252,7 @@ namespace F_Interpretator
             {
                 return new Token(TokenType.Integer, int.Parse(numValue, CultureInfo.InvariantCulture));
             }
-            
+
         }
 
         private Token MakeIdentifierLiteral()

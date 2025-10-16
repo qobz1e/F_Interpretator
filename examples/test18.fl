@@ -3,6 +3,6 @@
 	(setq x 3)
 	(setq y 2)
 	(plus x y)
-}
+)
 x
 y
