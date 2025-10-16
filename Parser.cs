@@ -28,7 +28,7 @@ namespace F_Interpretator
                 expressions.Add(ParseExpression());
                 SkipWhitespace();
             }
-
+                
             return new ProgramNode(expressions);
         }
 
@@ -78,23 +78,23 @@ namespace F_Interpretator
 
             var firstElement = ParseExpression();
 
-            // Проверяем специальные формы (только известные ключевые слова)
-            if (firstElement is IdentifierNode identifier && IsSpecialForm(identifier.Name.ToLower()))
-            {
-                return ParseSpecialForm(identifier.Name.ToLower());
-            }
+            //// Проверяем специальные формы (только известные ключевые слова)
+            //if (firstElement is IdentifierNode identifier && IsSpecialForm(identifier.Name.ToLower()))
+            //{
+            //    return ParseSpecialForm(identifier.Name.ToLower());
+            //}
 
-            // Проверяем встроенные функции (только известные операторы)
-            if (firstElement is IdentifierNode id && IsBuiltInFunction(id.Name.ToLower()))
-            {
-                return ParseFunctionCall(id.Name);
-            }
+            //// Проверяем встроенные функции (только известные операторы)
+            //if (firstElement is IdentifierNode id && IsBuiltInFunction(id.Name.ToLower()))
+            //{
+            //    return ParseFunctionCall(id.Name);
+            //}
 
-            // Если первый элемент - лямбда, то это вызов лямбда-функции
-            if (firstElement is LambdaNode lambda)
-            {
-                return ParseLambdaCall(lambda);
-            }
+            //// Если первый элемент - лямбда, то это вызов лямбда-функции
+            //if (firstElement is LambdaNode lambda)
+            //{
+            //    return ParseLambdaCall(lambda);
+            //}
 
             // Обычный список
             var elements = new List<ASTNode> { firstElement };
