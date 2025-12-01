@@ -1,0 +1,10 @@
+(func usedFunction (n)
+    (plus n 1))
+
+(func unusedFunction1 (x)
+    (times x 2))
+
+(func unusedFunction2 (y)
+    (minus y 1))
+
+(setq myresult (usedFunction 10))

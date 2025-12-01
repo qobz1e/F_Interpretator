@@ -1,0 +1,3 @@
+(func createadder (n) (lambda (x) (plus x n)))
+(setq add5 (createadder 5))
+(add5 10)

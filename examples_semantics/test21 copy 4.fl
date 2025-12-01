@@ -1,0 +1,13 @@
+(setq test 10)
+(cond true
+    (setq optimized 1)
+    (setq anyExpression 2))
+
+(cond false
+    (setq anyExpression 3)
+    (setq thisruns 4))
+
+test
+optimized
+anyExpression
+thisruns

@@ -1,0 +1,4 @@
+(cond (less 15 10)
+    (setq category 12)
+    (setq category 6))
+category

@@ -1,0 +1,13 @@
+(func summa (n)
+    (prog (i sum)
+        (setq i 0)
+        (setq sum 0)
+        (while (less i n)
+            (setq sum (plus sum i))
+            (setq i (plus i 1))
+            (cond (greater sum 50)
+                (return sum)
+                null))
+        (return sum)))
+
+(summa 4)

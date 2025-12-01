@@ -1,0 +1,8 @@
+(func square (x) 
+    (times x x))
+
+(func cube (x)
+    (times (square x) x))
+
+(setq result1 (square 5))
+(setq result2 (cube 3))

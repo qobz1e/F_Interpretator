@@ -1,0 +1,9 @@
+(func func1 ()
+	(setq x 10)
+	(func func3 (x)
+		(setq x (plus x 90))
+		(return x))
+	(return (func3 x)))
+
+(func1)
+(func3 5)

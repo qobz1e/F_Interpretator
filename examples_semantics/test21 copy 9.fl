@@ -1,0 +1,6 @@
+(func factorial (n)
+    (cond (less n 2)
+        1
+        (times n (factorial (minus n 1)))))
+
+(setq fact5 (factorial 5))

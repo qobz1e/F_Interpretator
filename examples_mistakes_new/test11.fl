@@ -1,0 +1,13 @@
+; Перетестить когда починишь возвращение функцией функции
+(func makecounter ()
+  (prog (count)
+    (setq count 0)
+    (func increment () 
+      (setq count (plus count 1))
+      count)
+    (return increment)))
+(setq c1 (makecounter))
+(setq c2 (makecounter))
+(c1)
+(c1)
+(c2)

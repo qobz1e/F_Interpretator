@@ -1,0 +1,13 @@
+(setq y 1)
+
+(func func1 ()
+	(setq x 10)
+	(setq y 100)
+	(return x))
+
+y
+
+(func func2 ()
+	(return x))
+
+(func2)

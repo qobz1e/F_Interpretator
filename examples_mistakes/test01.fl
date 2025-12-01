@@ -1,0 +1,17 @@
+(setq myfunc (lambda (p) (cond (less p 0) plus minus)))
+((myfunc -1) 1 2)
+
+(func f1 ()
+  (setq x 3)
+  (return (plus x 5)))
+
+(func f2 (z)
+  (setq x (z))
+  (return x))
+  
+(func f3 (z)
+  (setq x z)
+  (return (x)))
+
+(f2 f1)
+(f3 f1)

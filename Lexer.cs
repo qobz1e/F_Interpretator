@@ -120,6 +120,9 @@ namespace F_Interpretator
                 case "false":
                     tokenType = TokenType.Boolean;
                     break;
+                case "null":
+                    tokenType = TokenType.Null;
+                    break;
 
                 case "equal":
                     tokenType = TokenType.equal_Token;

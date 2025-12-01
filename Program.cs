@@ -8,7 +8,7 @@ internal class Program
 {
     private static void Main(string[] args)
     {
-        var examplesFolder = @"C:\Users\thatm\F_Interpretator\examples";
+        var examplesFolder = @"C:\Users\thatm\Documents\GitHub\F_Interpretator\examples_mistakes";
 
         foreach (var filePath in Directory.GetFiles(examplesFolder, "*.fl").OrderBy(f => f))
         {
@@ -17,13 +17,32 @@ internal class Program
                 var source = File.ReadAllText(filePath);
                 Console.WriteLine($"=== Parsing: {Path.GetFileName(filePath)} ===");
                 Console.WriteLine(source);
-                Console.WriteLine("--- AST ---");
+                Console.WriteLine("");
+                //Console.WriteLine("--- Parser AST ---");
 
                 var lexer = new Lexer(source);
                 var parser = new Parser(lexer);
-
                 var program = parser.Parse();
-                PrintAST(program, 0);
+                //PrintAST(program, 0);
+
+                var analyzer = new SemanticAnalyzer();
+                var optimizedProgram = analyzer.Analyze(program);
+
+                if (analyzer.HasErrors)
+                {
+                    Console.WriteLine("\nErrors detected:");
+                    foreach (var err in analyzer.Errors)
+                        Console.WriteLine($"  ERROR: {err}");
+                }
+                else if (!analyzer.HasErrors)
+                {
+                    //Console.WriteLine("\n--- Optimized AST ---");
+                    //PrintAST(optimizedProgram, 0);
+
+                    Console.WriteLine("\n--- INTERPRETER OUTPUT ---");
+                    var interpreter = new Interpreter();
+                    interpreter.Interpret(optimizedProgram);
+                }
 
                 Console.WriteLine("=====================\n");
             }
@@ -40,7 +59,6 @@ internal class Program
     private static void PrintAST(ASTNode node, int indent)
     {
         var indentStr = new string(' ', indent * 2);
-
         switch (node)
         {
             case ProgramNode program:
@@ -54,11 +72,14 @@ internal class Program
             case RealNode real:
                 Console.WriteLine($"{indentStr}Real: {real.Value.ToString(CultureInfo.InvariantCulture)}");
                 break;
-            case IdentifierNode id:
-                Console.WriteLine($"{indentStr}Identifier: {id.Name}");
-                break;
             case BooleanNode boolNode:
                 Console.WriteLine($"{indentStr}Boolean: {boolNode.Value}");
+                break;
+            case NullNode:
+                Console.WriteLine($"{indentStr}Null");
+                break;
+            case IdentifierNode id:
+                Console.WriteLine($"{indentStr}Identifier: {id.Name}");
                 break;
             case ListNode list:
                 Console.WriteLine($"{indentStr}List");
@@ -99,10 +120,10 @@ internal class Program
                 foreach (var exp in prog.Expressions)
                     PrintAST(exp, indent + 1);
                 break;
-            case WhileNode While:
+            case WhileNode whileNode:
                 Console.WriteLine($"{indentStr}While");
-                PrintAST(While.Condition, indent + 1);
-                foreach (var exp in While.Expressions)
+                PrintAST(whileNode.Condition, indent + 1);
+                foreach (var exp in whileNode.Expressions)
                     PrintAST(exp, indent + 2);
                 break;
             case LambdaNode lambda:
@@ -115,6 +136,13 @@ internal class Program
                 Console.WriteLine($"{indentStr}  Arguments:");
                 foreach (var arg in lambdaCall.Arguments)
                     PrintAST(arg, indent + 2);
+                break;
+            case ReturnNode returnNode:
+                Console.WriteLine($"{indentStr}Return");
+                PrintAST(returnNode.Value, indent + 1);
+                break;
+            case BreakNode:
+                Console.WriteLine($"{indentStr}Break");
                 break;
             default:
                 Console.WriteLine($"{indentStr}{node.GetType().Name}");

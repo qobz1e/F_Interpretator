@@ -1,0 +1,9 @@
+(while false
+    (setq optimizeWhile 100))
+
+(while true
+    (setq optimizeWhile1 200)
+    (break)
+    (setq optimizeWhile1 200))
+
+optimizeWhile1

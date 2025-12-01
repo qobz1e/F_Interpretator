@@ -1,0 +1,8 @@
+(func exampleReturnOptimize ()
+    (setq x 100)
+    (return x)
+    (setq y 200)
+    (setq z 300)
+    (return y))
+	
+(exampleReturnOptimize)

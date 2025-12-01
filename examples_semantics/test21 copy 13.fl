@@ -1,0 +1,6 @@
+(setq someLambda 
+    (lambda (x) 
+        (plus (times 2 3) x)))
+
+(setq res (someLambda 10))
+res

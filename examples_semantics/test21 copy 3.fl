@@ -1,0 +1,10 @@
+(func count10 ()
+    (setq i 0)
+    (while (less i 10)
+        (setq i (plus i 1))
+        (cond (equal i 5)
+            (break)
+            null))
+    (return i))
+
+(count10)

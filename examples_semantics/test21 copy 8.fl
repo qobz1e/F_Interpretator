@@ -1,0 +1,6 @@
+(func optimizedVariables ()
+    (setq used 10)
+    (setq unused 20)
+    (setq unused2 30)
+    (return (plus used 5)))
+(optimizedVariables)

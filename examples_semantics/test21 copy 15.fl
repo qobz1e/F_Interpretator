@@ -1,0 +1,17 @@
+(setq builtInTest1 (head '(1 2 3)))
+(setq builtInTest2 (tail '(1 2 3)))
+(setq builtInTest3 (cons 0 '(1 2 3)))
+(setq builtInTest4 (isint 42))
+(setq builtInTest5 (isreal 3.14))
+(setq builtInTest6 (isbool true))
+(setq builtInTest7 (isnull null))
+(setq builtInTest8 (eval '(plus 1 2)))
+
+builtInTest1
+builtInTest2
+builtInTest3
+builtInTest4
+builtInTest5
+builtInTest6
+builtInTest7
+builtInTest8

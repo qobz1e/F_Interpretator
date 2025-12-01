@@ -1,0 +1,5 @@
+(func outer (x)
+  (func inner (y) (plus x y))
+  (return inner))
+(setq closure (outer 10))
+(closure 5)

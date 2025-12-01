@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq.Expressions;
 
 namespace F_Interpretator
 {
@@ -29,16 +28,16 @@ namespace F_Interpretator
         public BooleanNode(bool value) => Value = value;
     }
 
+    public class NullNode : ASTNode
+    {
+        public static readonly NullNode Instance = new NullNode();
+        public NullNode() { }
+    }
+
     public class IdentifierNode : ASTNode
     {
         public string Name { get; }
         public IdentifierNode(string name) => Name = name;
-    }
-
-    public class StringNode : ASTNode
-    {
-        public string Value { get; }
-        public StringNode(string value) => Value = value;
     }
 
     public class ListNode : ASTNode
@@ -80,7 +79,7 @@ namespace F_Interpretator
         public ASTNode Test { get; }
         public ASTNode ResultTrue { get; }
         public ASTNode ResultFalse { get; }
-        public ConditionNode(ASTNode test, ASTNode resultTrue, ASTNode resultFalse=null)
+        public ConditionNode(ASTNode test, ASTNode resultTrue, ASTNode resultFalse = null)
         {
             Test = test;
             ResultTrue = resultTrue;
@@ -143,5 +142,17 @@ namespace F_Interpretator
             Condition = condition;
             Expressions = expressions;
         }
+    }
+
+    public class ReturnNode : ASTNode
+    {
+        public ASTNode Value { get; }
+        public ReturnNode(ASTNode value) => Value = value;
+    }
+
+    public class BreakNode : ASTNode
+    {
+        public static readonly BreakNode Instance = new BreakNode();
+        public BreakNode() { }
     }
 }

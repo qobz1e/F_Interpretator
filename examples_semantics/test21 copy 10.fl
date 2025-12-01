@@ -1,0 +1,5 @@
+(func Add (a b c)
+    (plus a (plus b c)))
+(break)
+
+(setq correct (Add 1 2 3))

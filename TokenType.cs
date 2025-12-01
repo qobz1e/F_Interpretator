@@ -1,6 +1,5 @@
 ﻿using System;
 
-
 namespace F_Interpretator
 {
     public enum TokenType
@@ -16,6 +15,7 @@ namespace F_Interpretator
         DecimalDigit,
         Real,
         Boolean,
+        Null,
 
         Keyword,
         True,

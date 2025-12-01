@@ -1,0 +1,8 @@
+(func calculate ()
+    (setq step1 (plus (times 2 3) (minus 10 5)))
+    (setq step2 (divide (plus 8 4) 3))
+    (setq step3 (equal (plus 1 1) 2))
+    (cond step3
+        (return step1)
+        (return step2)))
+(calculate)
