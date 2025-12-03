@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Xml.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+﻿using System.Globalization;
 
 namespace F_Interpretator
 {
@@ -154,7 +148,13 @@ namespace F_Interpretator
             if (IsBuiltInFunction(name))
                 return name;
 
-            // Ищем функцию в текущей и глобальной области видимости
+            // Ищем переменную/функцию в текущей области видимости
+            if (scopes.Peek().ContainsKey(name))
+            {
+                return scopes.Peek()[name];
+            }
+
+            // Ищем функцию во всех текущих областях видимости
             foreach (var scope in scopes)
             {
                 if (scope.ContainsKey(name))
@@ -164,12 +164,6 @@ namespace F_Interpretator
                         return scope[name];
                     }
                 }
-            }
-
-            // Ищем переменную в текущей области видимости
-            if (scopes.Peek().ContainsKey(name))
-            {
-                return scopes.Peek()[name];
             }
 
 

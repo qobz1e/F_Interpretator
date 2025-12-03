@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Data.Common;
-
 namespace F_Interpretator
 {
     public class Parser
@@ -79,25 +75,6 @@ namespace F_Interpretator
 
             var firstElement = ParseExpression();
 
-            //// ��������� ����������� ����� (������ ��������� �������� �����)
-            //if (firstElement is IdentifierNode identifier && IsSpecialForm(identifier.Name.ToLower()))
-            //{
-            //    return ParseSpecialForm(identifier.Name.ToLower());
-            //}
-
-            //// ��������� ���������� ������� (������ ��������� ���������)
-            //if (firstElement is IdentifierNode id && IsBuiltInFunction(id.Name.ToLower()))
-            //{
-            //    return ParseFunctionCall(id.Name);
-            //}
-
-            //// ���� ������ ������� - ������, �� ��� ����� ������-�������
-            //if (firstElement is LambdaNode lambda)
-            //{
-            //    return ParseLambdaCall(lambda);
-            //}
-
-            // ������� ������
             var elements = new List<ASTNode> { firstElement };
             while (currentToken.tokenType != TokenType.CloseParenthesis && currentToken.tokenType != TokenType.EOF)
             {
@@ -111,183 +88,12 @@ namespace F_Interpretator
             return new ListNode(elements);
         }
 
-        private ASTNode ParseFunctionCall(string functionName)
-        {
-            var arguments = new List<ASTNode>();
-
-            while (currentToken.tokenType != TokenType.CloseParenthesis && currentToken.tokenType != TokenType.EOF)
-            {
-                SkipWhitespace();
-                if (currentToken.tokenType == TokenType.CloseParenthesis) break;
-
-                arguments.Add(ParseExpression());
-            }
-
-            Consume(TokenType.CloseParenthesis);
-            return new FunctionCallNode(functionName, arguments);
-        }
-
-        private ASTNode ParseSpecialForm(string formName)
-        {
-            return formName switch
-            {
-                "quote" => ParseQuote(),
-                "setq" => ParseSetq(),
-                "cond" => ParseCond(),
-                "func" => ParseFunc(),
-                "lambda" => ParseLambda(),
-                "prog" => ParseProg(),
-                "while" => ParseWhile(),
-                "return" => ParseReturn(),
-                "break" => ParseBreak(),
-                _ => ParseFunctionCall(formName)
-            };
-        }
 
         private ASTNode ParseQuote()
         {
             Consume(TokenType.quote_Token);
             var expression = ParseExpression();
             return new QuoteNode(expression);
-        }
-
-        private ASTNode ParseSetq()
-        {
-            // ��� ��������� 'setq' ��� �������������
-            var variable = ExpectIdentifier();
-            var value = ParseExpression();
-            Consume(TokenType.CloseParenthesis);
-            return new SetqNode(variable, value);
-        }
-        private ASTNode ParseCond()
-        {
-            // ��� ��������� 'cond' ��� �������������
-            SkipWhitespace();
-
-            var test = ParseExpression();
-            var result1 = ParseExpression();
-            if (currentToken.tokenType == TokenType.CloseParenthesis)
-            {
-                Consume(TokenType.CloseParenthesis);
-                return new ConditionNode(test, result1);
-            }
-            else
-            {
-                var result2 = ParseExpression();
-                Consume(TokenType.CloseParenthesis);
-                return new ConditionNode(test, result1, result2);
-            }
-        }
-
-        private ASTNode ParseFunc()
-        {
-            // ��� ��������� 'func' ��� �������������
-            var functionName = ExpectIdentifier();
-            var parameters = ParseParameters();
-            var bodyExpressions = new List<ASTNode>();
-
-            // ��������� ��� expressions, ������� �������� �������
-            while (currentToken.tokenType != TokenType.CloseParenthesis && currentToken.tokenType != TokenType.EOF)
-            {
-                SkipWhitespace();
-                if (currentToken.tokenType == TokenType.CloseParenthesis) break;
-                bodyExpressions.Add(ParseExpression());
-            }
-
-            Consume(TokenType.CloseParenthesis);
-
-            return new FuncNode(functionName, parameters, bodyExpressions);
-        }
-
-        private ASTNode ParseLambdaCall(LambdaNode lambda)
-        {
-            var arguments = new List<ASTNode>();
-
-            while (currentToken.tokenType != TokenType.CloseParenthesis && currentToken.tokenType != TokenType.EOF)
-            {
-                SkipWhitespace();
-                if (currentToken.tokenType == TokenType.CloseParenthesis) break;
-
-                arguments.Add(ParseExpression());
-            }
-
-            Consume(TokenType.CloseParenthesis);
-            return new LambdaCallNode(lambda, arguments);
-        }
-
-        private ASTNode ParseLambda()
-        {
-            // ��� ��������� 'lambda' ��� �������������
-            var parameters = ParseParameters();
-            var body = ParseExpression();
-            Consume(TokenType.CloseParenthesis);
-            return new LambdaNode(parameters, body);
-        }
-
-        private ASTNode ParseProg()
-        {
-            // ��� ��������� 'prog' ��� �������������
-            var parameters = ParseParameters();
-            var expressions = new List<ASTNode>();
-
-            while (currentToken.tokenType != TokenType.CloseParenthesis && currentToken.tokenType != TokenType.EOF)
-            {
-                SkipWhitespace();
-                if (currentToken.tokenType == TokenType.CloseParenthesis) break;
-
-                expressions.Add(ParseExpression());
-            }
-
-            Consume(TokenType.CloseParenthesis);
-            return new ProgNode(parameters, expressions);
-        }
-
-        private ASTNode ParseWhile()
-        {
-            // ��� ��������� 'while' ��� �������������
-            var condition = ParseExpression();
-            var expressions = new List<ASTNode>();
-
-            while (currentToken.tokenType != TokenType.CloseParenthesis && currentToken.tokenType != TokenType.EOF)
-            {
-                SkipWhitespace();
-                if (currentToken.tokenType == TokenType.CloseParenthesis) break;
-
-                expressions.Add(ParseExpression());
-            }
-
-            Consume(TokenType.CloseParenthesis);
-            return new WhileNode(condition, expressions);
-        }
-
-        private ASTNode ParseReturn()
-        {
-            var value = ParseExpression();
-            Consume(TokenType.CloseParenthesis);
-            return new ReturnNode(value);
-        }
-
-        private ASTNode ParseBreak()
-        {
-            Consume(TokenType.CloseParenthesis);
-            return BreakNode.Instance;
-        }
-
-        private List<string> ParseParameters()
-        {
-            Consume(TokenType.OpenParenthesis);
-            var parameters = new List<string>();
-
-            while (currentToken.tokenType != TokenType.CloseParenthesis && currentToken.tokenType != TokenType.EOF)
-            {
-                SkipWhitespace();
-                if (currentToken.tokenType == TokenType.CloseParenthesis) break;
-
-                parameters.Add(ExpectIdentifier());
-            }
-
-            Consume(TokenType.CloseParenthesis);
-            return parameters;
         }
 
         private IntegerNode ParseNumber()
@@ -299,11 +105,9 @@ namespace F_Interpretator
 
         private RealNode ParseReal()
         {
-            // ������������ ����� � ������ � ����� (�������� "2.")
             double value;
             if (currentToken.literal is string strValue)
             {
-                // ���� literal ��� ������ (�������� "2."), ������ �
                 if (double.TryParse(strValue, System.Globalization.NumberStyles.Any,
                     System.Globalization.CultureInfo.InvariantCulture, out double parsedValue))
                 {
@@ -341,7 +145,6 @@ namespace F_Interpretator
         {
             string name;
 
-            // �������� ��� �� �������� ������ ��� �� ���� ������
             if (currentToken.tokenType == TokenType.Identifier)
             {
                 name = (string)currentToken.literal;
@@ -352,7 +155,6 @@ namespace F_Interpretator
             }
             else
             {
-                // ��� �������� ���� ����������� TokenType � ������
                 name = TokenTypeToString(currentToken.tokenType);
             }
 
@@ -360,7 +162,6 @@ namespace F_Interpretator
             return new IdentifierNode(name);
         }
 
-        // ��������������� ������
         private void Consume(TokenType expectedType)
         {
             if (currentToken.tokenType != expectedType && currentToken.tokenType != TokenType.EndLine)
@@ -373,31 +174,6 @@ namespace F_Interpretator
             }
         }
 
-        private string ExpectIdentifier()
-        {
-            if (currentToken.tokenType != TokenType.Identifier &&
-                !IsKeywordToken(currentToken.tokenType) &&
-                currentToken.tokenType != TokenType.Boolean)
-                throw new SyntaxErrorException($"Expected identifier or keyword, but got {currentToken.tokenType}");
-
-            string name;
-            if (currentToken.tokenType == TokenType.Identifier)
-            {
-                name = (string)currentToken.literal;
-            }
-            else if (currentToken.tokenType == TokenType.Boolean)
-            {
-                name = currentToken.literal?.ToString() ?? "false";
-            }
-            else
-            {
-                name = TokenTypeToString(currentToken.tokenType);
-            }
-
-            Consume(currentToken.tokenType);
-            return name;
-        }
-
         private void SkipWhitespace()
         {
             while (currentToken.tokenType == TokenType.EndLine ||
@@ -407,13 +183,6 @@ namespace F_Interpretator
                 currentToken = lexer.Lex();
             }
         }
-
-        private bool IsKeywordToken(TokenType type) =>
-            type == TokenType.plus_Token || type == TokenType.minus_Token ||
-            type == TokenType.times_Token || type == TokenType.divide_Token ||
-            type == TokenType.setq_Token || type == TokenType.cond_Token ||
-            type == TokenType.func_Token || type == TokenType.lambda_Token ||
-            type == TokenType.prog_Token || type == TokenType.while_Token;
 
         private string TokenTypeToString(TokenType type)
         {
@@ -434,26 +203,6 @@ namespace F_Interpretator
                 TokenType.xor_Token => "xor",
                 TokenType.not_Token => "not",
                 _ => type.ToString().ToLower().Replace("_token", "")
-            };
-        }
-
-        private bool IsSpecialForm(string name) => name switch
-        {
-            "quote" or "setq" or "cond" or "func" or "lambda" or "prog" or "while" or
-            "return" or "break" => true,
-            _ => false
-        };
-
-        private bool IsBuiltInFunction(string name)
-        {
-            return name switch
-            {
-                "plus" or "minus" or "times" or "divide" or
-                "equal" or "nonequal" or "less" or "lesseq" or "greater" or "greatereq" or
-                "isint" or "isreal" or "isbool" or "isnull" or "isatom" or "islist" or
-                "and" or "or" or "xor" or "not" or
-                "head" or "tail" or "cons" or "eval" or "value" => true,
-                _ => false
             };
         }
     }

@@ -7,5 +7,4 @@
 (isbool 5)
 (isnull null)
 (isnull (quote ()))
-(isnull (quote (1)))
 (isatom (quote (a b))) 

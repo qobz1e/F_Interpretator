@@ -1,4 +1,3 @@
-
 namespace F_Interpretator
 {
     public abstract class ASTNode { }
