@@ -8,4 +8,4 @@
 (isnull null)
 (isnull (quote ()))
 (isnull (quote (1)))
-(isatom (quote (a b)))
+(isatom (quote (a b))) 

@@ -1,4 +1,4 @@
-using System;
+п»їusing System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -96,16 +96,31 @@ namespace F_Interpretator
 
         private object ConvertASTToData(ASTNode node)
         {
-            return node switch
+            switch (node)
             {
-                IntegerNode intNode => intNode.Value,
-                RealNode realNode => realNode.Value,
-                BooleanNode boolNode => boolNode.Value,
-                NullNode => null,
-                IdentifierNode idNode => idNode.Name,
-                ListNode listNode => listNode.Elements.Select(ConvertASTToData).ToList(),
-                _ => node.ToString()
-            };
+                case IntegerNode intNode:
+                    return intNode.Value;
+
+                case RealNode realNode:
+                    return realNode.Value;
+
+                case BooleanNode boolNode:
+                    return boolNode.Value;
+
+                case NullNode:
+                    return null;
+
+                case IdentifierNode idNode:
+                    return idNode.Name;
+
+                case ListNode listNode:
+                    if (listNode.Elements.Count == 0)
+                        return new List<object>(); // РџСѓСЃС‚РѕР№ СЃРїРёСЃРѕРє
+                    return listNode.Elements.Select(ConvertASTToData).ToList();
+
+                default:
+                    return node.ToString();
+            }
         }
 
         private object EvaluateProgram(ProgramNode program)
@@ -122,7 +137,7 @@ namespace F_Interpretator
         {
             var name = idNode.Name;
 
-            // Проверяем специальные ключевые слова
+            // РџСЂРѕРІРµСЂСЏРµРј СЃРїРµС†РёР°Р»СЊРЅС‹Рµ РєР»СЋС‡РµРІС‹Рµ СЃР»РѕРІР°
             if (name.ToLower() == "break")
                 throw new BreakException();
 
@@ -135,13 +150,28 @@ namespace F_Interpretator
             if (name.ToLower() == "null")
                 return null;
 
-            // Если это встроенная функция, возвращаем её имя
+            // Р•СЃР»Рё СЌС‚Рѕ РІСЃС‚СЂРѕРµРЅРЅР°СЏ С„СѓРЅРєС†РёСЏ, РІРѕР·РІСЂР°С‰Р°РµРј РµС‘ РёРјСЏ
             if (IsBuiltInFunction(name))
                 return name;
 
-            // Ищем переменную/функцию в текущей области видимости
+            // РС‰РµРј С„СѓРЅРєС†РёСЋ РІ С‚РµРєСѓС‰РµР№ Рё РіР»РѕР±Р°Р»СЊРЅРѕР№ РѕР±Р»Р°СЃС‚Рё РІРёРґРёРјРѕСЃС‚Рё
+            foreach (var scope in scopes)
+            {
+                if (scope.ContainsKey(name))
+                {
+                    if (scope[name] is FuncNode)
+                    {
+                        return scope[name];
+                    }
+                }
+            }
+
+            // РС‰РµРј РїРµСЂРµРјРµРЅРЅСѓСЋ РІ С‚РµРєСѓС‰РµР№ РѕР±Р»Р°СЃС‚Рё РІРёРґРёРјРѕСЃС‚Рё
             if (scopes.Peek().ContainsKey(name))
+            {
                 return scopes.Peek()[name];
+            }
+
 
             throw new RuntimeException($"Undefined variable: {name}");
         }
@@ -153,7 +183,7 @@ namespace F_Interpretator
 
             var firstElement = listNode.Elements[0];
 
-            // Обработка специальных форм
+            // РћР±СЂР°Р±РѕС‚РєР° СЃРїРµС†РёР°Р»СЊРЅС‹С… С„РѕСЂРј
             if (firstElement is IdentifierNode idNode)
             {
                 var functionName = idNode.Name.ToLower();
@@ -172,34 +202,34 @@ namespace F_Interpretator
                 }
             }
 
-            // Обработка (quote <list>)
+            // РћР±СЂР°Р±РѕС‚РєР° (quote <list>)
             if (firstElement is QuoteNode quoteNode)
             {
                 return ConvertASTToData(quoteNode.Expression);
             }
 
-            // Сначала собираем все элементы данного списка 
+            // РЎРЅР°С‡Р°Р»Р° СЃРѕР±РёСЂР°РµРј РІСЃРµ СЌР»РµРјРµРЅС‚С‹ РґР°РЅРЅРѕРіРѕ СЃРїРёСЃРєР° 
             var evaluatedElements = new List<object>();
             foreach (var element in listNode.Elements)
             {
                 evaluatedElements.Add(Evaluate(element));
             }
 
-            // Если первый элемент - user-defined функция, вызываем ее
+            // Р•СЃР»Рё РїРµСЂРІС‹Р№ СЌР»РµРјРµРЅС‚ - user-defined С„СѓРЅРєС†РёСЏ, РІС‹Р·С‹РІР°РµРј РµРµ
             if (evaluatedElements[0] is FuncNode funcNode)
             {
                 var arguments = evaluatedElements.Skip(1).ToList();
                 return EvaluateUserFunction(funcNode, arguments);
             }
 
-            // Если первый элемент - лямбда, вызываем лямбду
+            // Р•СЃР»Рё РїРµСЂРІС‹Р№ СЌР»РµРјРµРЅС‚ - Р»СЏРјР±РґР°, РІС‹Р·С‹РІР°РµРј Р»СЏРјР±РґСѓ
             if (evaluatedElements[0] is LambdaNode lambda)
             {
                 var arguments = evaluatedElements.Skip(1).ToList();
                 return EvaluateLambdaCallDirect(lambda, arguments);
             }
 
-            // Если это встроенная функция, выполняем ее
+            // Р•СЃР»Рё СЌС‚Рѕ РІСЃС‚СЂРѕРµРЅРЅР°СЏ С„СѓРЅРєС†РёСЏ, РІС‹РїРѕР»РЅСЏРµРј РµРµ
             if (evaluatedElements[0] is string builtInFuncName)
             {
                 if (IsBuiltInFunction(builtInFuncName))
@@ -209,10 +239,10 @@ namespace F_Interpretator
                 }
             }
 
-            // Если первый элемент - переменная, содержащая функцию
+            // Р•СЃР»Рё РїРµСЂРІС‹Р№ СЌР»РµРјРµРЅС‚ - РїРµСЂРµРјРµРЅРЅР°СЏ, СЃРѕРґРµСЂР¶Р°С‰Р°СЏ С„СѓРЅРєС†РёСЋ
             if (firstElement is IdentifierNode varName)
             {
-                // Ищем переменную в текущей области видимости
+                // РС‰РµРј РїРµСЂРµРјРµРЅРЅСѓСЋ РІ С‚РµРєСѓС‰РµР№ РѕР±Р»Р°СЃС‚Рё РІРёРґРёРјРѕСЃС‚Рё
                 if (scopes.Peek().ContainsKey(varName.Name))
                 {
                     var funcValue = scopes.Peek()[varName.Name];
@@ -235,7 +265,7 @@ namespace F_Interpretator
                 }
             }
 
-            // Возвращаем полученный список, если с ним ничего не делали
+            // Р’РѕР·РІСЂР°С‰Р°РµРј РїРѕР»СѓС‡РµРЅРЅС‹Р№ СЃРїРёСЃРѕРє, РµСЃР»Рё СЃ РЅРёРј РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°Р»Рё
             return evaluatedElements;
         }
 
@@ -246,10 +276,10 @@ namespace F_Interpretator
 
             var arg = Evaluate(evalList.Elements[1]);
 
-            // Если аргумент - список, интерпретируем его
+            // Р•СЃР»Рё Р°СЂРіСѓРјРµРЅС‚ - СЃРїРёСЃРѕРє, РёРЅС‚РµСЂРїСЂРµС‚РёСЂСѓРµРј РµРіРѕ
             if (arg is List<object> list)
             {
-                // Преобразуем список данных обратно в AST
+                // РџСЂРµРѕР±СЂР°Р·СѓРµРј СЃРїРёСЃРѕРє РґР°РЅРЅС‹С… РѕР±СЂР°С‚РЅРѕ РІ AST
                 var astNode = ConvertDataToAST(list);
                 return Evaluate(astNode);
             }
@@ -276,11 +306,11 @@ namespace F_Interpretator
             if (funcNode.Parameters.Count != arguments.Count)
                 throw new RuntimeException($"Function {funcNode.FunctionName} expects {funcNode.Parameters.Count} arguments, got {arguments.Count}");
 
-            // Создаем inner-scope для функции
+            // РЎРѕР·РґР°РµРј inner-scope РґР»СЏ С„СѓРЅРєС†РёРё
             var newScope = new Dictionary<string, object>();
             for (int i = 0; i < funcNode.Parameters.Count; i++)
             {
-                // Сохраняем аргумент в области видимости под именем параметра
+                // РЎРѕС…СЂР°РЅСЏРµРј Р°СЂРіСѓРјРµРЅС‚ РІ РѕР±Р»Р°СЃС‚Рё РІРёРґРёРјРѕСЃС‚Рё РїРѕРґ РёРјРµРЅРµРј РїР°СЂР°РјРµС‚СЂР°
                 newScope[funcNode.Parameters[i]] = arguments[i];
             }
 
@@ -317,7 +347,7 @@ namespace F_Interpretator
                 return EvaluateBuiltInFunction(functionName, arguments);
             }
 
-            // Ищем функцию в текущей области видимости
+            // РС‰РµРј С„СѓРЅРєС†РёСЋ РІ С‚РµРєСѓС‰РµР№ РѕР±Р»Р°СЃС‚Рё РІРёРґРёРјРѕСЃС‚Рё
             if (scopes.Peek().ContainsKey(functionName))
             {
                 var func = scopes.Peek()[functionName];
@@ -338,7 +368,7 @@ namespace F_Interpretator
         {
             if (condList.Elements[1] is ListNode condition && condList.Elements.Count > 2)
             {
-                // Форма: (cond test result1 result2)
+                // Р¤РѕСЂРјР°: (cond test result1 result2)
                 var testResult = Evaluate(condition);
                 if (ConvertToBoolean(testResult))
                 {
@@ -351,7 +381,7 @@ namespace F_Interpretator
             }
             else if (condList.Elements[1] is IdentifierNode someCond && condList.Elements.Count > 2)
             {
-                // Форма: (cond test result1 result2)
+                // Р¤РѕСЂРјР°: (cond test result1 result2)
                 if (ConvertToBoolean(Evaluate(someCond)))
                 {
                     return Evaluate(condList.Elements[2]);
@@ -450,10 +480,10 @@ namespace F_Interpretator
 
             var body = lambdaList.Elements[2];
 
-            // Получаем текущую область видимости
+            // РџРѕР»СѓС‡Р°РµРј С‚РµРєСѓС‰СѓСЋ РѕР±Р»Р°СЃС‚СЊ РІРёРґРёРјРѕСЃС‚Рё
             var currentScope = scopes.Peek();
 
-            // Создаем копию тела с подстановкой значений
+            // РЎРѕР·РґР°РµРј РєРѕРїРёСЋ С‚РµР»Р° СЃ РїРѕРґСЃС‚Р°РЅРѕРІРєРѕР№ Р·РЅР°С‡РµРЅРёР№
             var substitutedBody = SubstituteVariables(body, parameters, currentScope);
 
             return new LambdaNode(parameters, substitutedBody);
@@ -461,14 +491,14 @@ namespace F_Interpretator
 
         private ASTNode SubstituteVariables(ASTNode node, List<string> someParams, Dictionary<string, object> scope)
         {
-            // Если это идентификатор И он не параметр лямбды И есть в scope
+            // Р•СЃР»Рё СЌС‚Рѕ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ Р РѕРЅ РЅРµ РїР°СЂР°РјРµС‚СЂ Р»СЏРјР±РґС‹ Р РµСЃС‚СЊ РІ scope
             if (node is IdentifierNode idNode &&
                 !someParams.Contains(idNode.Name) &&
                 scope.ContainsKey(idNode.Name))
             {
                 var value = scope[idNode.Name];
 
-                // Преобразуем значение обратно в AST узел
+                // РџСЂРµРѕР±СЂР°Р·СѓРµРј Р·РЅР°С‡РµРЅРёРµ РѕР±СЂР°С‚РЅРѕ РІ AST СѓР·РµР»
                 return value switch
                 {
                     int i => new IntegerNode(i),
@@ -476,13 +506,13 @@ namespace F_Interpretator
                     bool b => new BooleanNode(b),
                     string s => new IdentifierNode(s),
                     List<object> list => ConvertListToAST(list),
-                    FuncNode func => func, // Функции оставляем как есть
+                    FuncNode func => func, // Р¤СѓРЅРєС†РёРё РѕСЃС‚Р°РІР»СЏРµРј РєР°Рє РµСЃС‚СЊ
                     LambdaNode lambda => lambda,
-                    _ => idNode // Если не знаем как преобразовать, оставляем как есть
+                    _ => idNode // Р•СЃР»Рё РЅРµ Р·РЅР°РµРј РєР°Рє РїСЂРµРѕР±СЂР°Р·РѕРІР°С‚СЊ, РѕСЃС‚Р°РІР»СЏРµРј РєР°Рє РµСЃС‚СЊ
                 };
             }
 
-            // Если это список, рекурсивно обрабатываем элементы
+            // Р•СЃР»Рё СЌС‚Рѕ СЃРїРёСЃРѕРє, СЂРµРєСѓСЂСЃРёРІРЅРѕ РѕР±СЂР°Р±Р°С‚С‹РІР°РµРј СЌР»РµРјРµРЅС‚С‹
             if (node is ListNode listNode)
             {
                 var newElements = new List<ASTNode>();
@@ -493,7 +523,7 @@ namespace F_Interpretator
                 return new ListNode(newElements);
             }
 
-            // Для остальных типов узлов возвращаем как есть
+            // Р”Р»СЏ РѕСЃС‚Р°Р»СЊРЅС‹С… С‚РёРїРѕРІ СѓР·Р»РѕРІ РІРѕР·РІСЂР°С‰Р°РµРј РєР°Рє РµСЃС‚СЊ
             return node;
         }
 
@@ -537,7 +567,7 @@ namespace F_Interpretator
             if (lambda.Parameters.Count > arguments.Count)
                 throw new RuntimeException($"Lambda expects at least {lambda.Parameters.Count} arguments, got {arguments.Count}");
 
-            // Создаем область видимости для параметров лямбды
+            // РЎРѕР·РґР°РµРј РѕР±Р»Р°СЃС‚СЊ РІРёРґРёРјРѕСЃС‚Рё РґР»СЏ РїР°СЂР°РјРµС‚СЂРѕРІ Р»СЏРјР±РґС‹
             var newScope = new Dictionary<string, object>();
             for (int i = 0; i < lambda.Parameters.Count; i++)
             {
@@ -548,7 +578,7 @@ namespace F_Interpretator
             var result = Evaluate(lambda.Body);
             scopes.Pop();
 
-            // ЕСЛИ РЕЗУЛЬТАТ - ИМЯ ФУНКЦИИ И ЕСТЬ ДОПОЛНИТЕЛЬНЫЕ АРГУМЕНТЫ
+            // Р•РЎР›Р Р Р•Р—РЈР›Р¬РўРђРў - РРњРЇ Р¤РЈРќРљР¦РР Р Р•РЎРўР¬ Р”РћРџРћР›РќРРўР•Р›Р¬РќР«Р• РђР Р“РЈРњР•РќРўР«
             if (result is string funcName && arguments.Count > lambda.Parameters.Count)
             {
                 var remainingArgs = arguments.Skip(lambda.Parameters.Count).ToList();
@@ -630,7 +660,7 @@ namespace F_Interpretator
             var left = ConvertToNumber(args[0]);
             var right = ConvertToNumber(args[1]);
 
-            // Деление всегда возвращает double
+            // Р”РµР»РµРЅРёРµ РІСЃРµРіРґР° РІРѕР·РІСЂР°С‰Р°РµС‚ double
             var leftVal = left is int leftInt ? (double)leftInt : (double)left;
             var rightVal = right is int rightInt ? (double)rightInt : (double)right;
 
@@ -762,7 +792,26 @@ namespace F_Interpretator
         private object EvaluateIsNull(List<object> args)
         {
             ValidateArgumentsCount("isnull", 1, args.Count);
-            return args[0] is null || args[0] is NullNode;
+
+            var arg = args[0];
+
+            // РџСЂРѕРІРµСЂСЏРµРј РЅР° null
+            if (arg == null)
+                return true;
+
+            // РџСЂРѕРІРµСЂСЏРµРј РЅР° NullNode
+            if (arg is NullNode)
+                return true;
+
+            // РџСЂРѕРІРµСЂСЏРµРј РЅР° РїСѓСЃС‚РѕР№ СЃРїРёСЃРѕРє
+            if (arg is List<object> list && list.Count == 0)
+                return true;
+
+            // РџСЂРѕРІРµСЂСЏРµРј РЅР° quote РїСѓСЃС‚РѕРіРѕ СЃРїРёСЃРєР°
+            if (arg is ListNode listNode && listNode.Elements.Count == 0)
+                return true;
+
+            return false;
         }
 
         private object EvaluateIsAtom(List<object> args)
@@ -875,7 +924,7 @@ namespace F_Interpretator
             var result = Evaluate(lambda.Body);
             scopes.Pop();
 
-            // Если лямбда вернула имя функции и есть дополнительные аргументы, вызываем её
+            // Р•СЃР»Рё Р»СЏРјР±РґР° РІРµСЂРЅСѓР»Р° РёРјСЏ С„СѓРЅРєС†РёРё Рё РµСЃС‚СЊ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ Р°СЂРіСѓРјРµРЅС‚С‹, РІС‹Р·С‹РІР°РµРј РµС‘
             if (result is string returnedFuncName && arguments.Count > lambda.Parameters.Count)
             {
                 var remainingArgs = arguments.Skip(lambda.Parameters.Count).ToList();
@@ -925,6 +974,7 @@ namespace F_Interpretator
                 double d => Math.Abs(d) > 0.000001,
                 string s => !string.IsNullOrEmpty(s),
                 List<object> list => list.Count > 0,
+                ListNode listNode => listNode.Elements.Count > 0,
                 null => false,
                 _ => true
             };
@@ -932,9 +982,28 @@ namespace F_Interpretator
 
         private bool AreEqual(object left, object right)
         {
-            if (left == null && right == null) return true;
-            if (left == null || right == null) return false;
-            if (left.GetType() != right.GetType()) return false;
+            if (left == null && right == null)
+                return true;
+
+            if (left == null || right == null)
+                return false;
+
+            if (left is List<object> leftList && leftList.Count == 0)
+            {
+                if (right is List<object> rightList && rightList.Count == 0)
+                    return true;
+                if (right == null || right is NullNode)
+                    return true;
+            }
+
+            if (left.GetType() != right.GetType())
+            {
+                if ((left is int || left is double) && (right is int || right is double))
+                {
+                    return Convert.ToDouble(left) == Convert.ToDouble(right);
+                }
+                return false;
+            }
 
             return left.Equals(right);
         }
@@ -981,7 +1050,7 @@ namespace F_Interpretator
 
         private string FormatList(List<object> list)
         {
-            // Если список содержит другие списки, форматируем их рекурсивно
+            // Р•СЃР»Рё СЃРїРёСЃРѕРє СЃРѕРґРµСЂР¶РёС‚ РґСЂСѓРіРёРµ СЃРїРёСЃРєРё, С„РѕСЂРјР°С‚РёСЂСѓРµРј РёС… СЂРµРєСѓСЂСЃРёРІРЅРѕ
             var elements = list.Select(item =>
             {
                 if (item is List<object> innerList)

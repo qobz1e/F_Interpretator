@@ -2,4 +2,3 @@
 (quote symbol)
 
 (eval (quote (plus 2 3)))
-(eval (quote (quote (a b c))))
