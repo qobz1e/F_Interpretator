@@ -1,0 +1,2 @@
+(setq notfunc 5)
+(notfunc 2 notfunc 3)

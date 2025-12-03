@@ -1,14 +1,11 @@
 ﻿using F_Interpretator;
-using System;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 
 internal class Program
 {
     private static void Main(string[] args)
     {
-        var examplesFolder = @"C:\Users\thatm\Documents\GitHub\F_Interpretator\examples_mistakes";
+        var examplesFolder = @"C:\Users\thatm\Documents\GitHub\F_Interpretator\examples_mistakes_new";
 
         foreach (var filePath in Directory.GetFiles(examplesFolder, "*.fl").OrderBy(f => f))
         {

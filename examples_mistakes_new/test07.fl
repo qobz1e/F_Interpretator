@@ -1,3 +1,17 @@
-(func createadder (n) (lambda (x) (plus x n)))
-(setq add5 (createadder 5))
-(add5 10)
+(setq i 0)
+(setq sum 0)
+(while (less i 5)
+  (setq sum (plus sum i))
+  (setq i (plus i 1)))
+sum
+
+(setq j 0)
+(while true
+  (setq j (plus j 1))
+  (cond (greater j 3) break))
+j
+
+(prog (x y)
+  (setq x 10)
+  (setq y 20)
+  (plus x y))

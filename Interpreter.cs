@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Xml.Linq;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -123,7 +124,7 @@ namespace F_Interpretator
 
             // Проверяем специальные ключевые слова
             if (name.ToLower() == "break")
-                return BreakNode.Instance;
+                throw new BreakException();
 
             if (name.ToLower() == "true")
                 return true;
@@ -138,12 +139,9 @@ namespace F_Interpretator
             if (IsBuiltInFunction(name))
                 return name;
 
-            // Ищем переменную/функцию в областях видимости
-            foreach (var scope in scopes)
-            {
-                if (scope.ContainsKey(name))
-                    return scope[name];
-            }
+            // Ищем переменную/функцию в текущей области видимости
+            if (scopes.Peek().ContainsKey(name))
+                return scopes.Peek()[name];
 
             throw new RuntimeException($"Undefined variable: {name}");
         }
@@ -191,7 +189,7 @@ namespace F_Interpretator
             if (evaluatedElements[0] is FuncNode funcNode)
             {
                 var arguments = evaluatedElements.Skip(1).ToList();
-                return CallFunction(funcNode.FunctionName, arguments);
+                return EvaluateUserFunction(funcNode, arguments);
             }
 
             // Если первый элемент - лямбда, вызываем лямбду
@@ -214,45 +212,31 @@ namespace F_Interpretator
             // Если первый элемент - переменная, содержащая функцию
             if (firstElement is IdentifierNode varName)
             {
-                // Ищем переменную в областях видимости
-                foreach (var scope in scopes)
+                // Ищем переменную в текущей области видимости
+                if (scopes.Peek().ContainsKey(varName.Name))
                 {
-                    if (scope.ContainsKey(varName.Name))
-                    {
-                        var funcValue = scope[varName.Name];
+                    var funcValue = scopes.Peek()[varName.Name];
 
-                        if (funcValue is FuncNode funcFromVar)
-                        {
-                            var arguments = evaluatedElements.Skip(1).ToList();
-                            return CallFunction(funcFromVar.FunctionName, arguments);
-                        }
-                        else if (funcValue is LambdaNode lambdaFromVar)
-                        {
-                            var arguments = evaluatedElements.Skip(1).ToList();
-                            return EvaluateLambdaCallDirect(lambdaFromVar, arguments);
-                        }
-                        else if (funcValue is string builtInFunc && IsBuiltInFunction(builtInFunc))
-                        {
-                            var arguments = evaluatedElements.Skip(1).ToList();
-                            return CallFunction(builtInFunc, arguments);
-                        }
+                    if (funcValue is FuncNode funcFromVar)
+                    {
+                        var arguments = evaluatedElements.Skip(1).ToList();
+                        return CallFunction(funcFromVar.FunctionName, arguments);
+                    }
+                    else if (funcValue is LambdaNode lambdaFromVar)
+                    {
+                        var arguments = evaluatedElements.Skip(1).ToList();
+                        return EvaluateLambdaCallDirect(lambdaFromVar, arguments);
+                    }
+                    else if (funcValue is string builtInFunc && IsBuiltInFunction(builtInFunc))
+                    {
+                        var arguments = evaluatedElements.Skip(1).ToList();
+                        return CallFunction(builtInFunc, arguments);
                     }
                 }
             }
 
             // Возвращаем полученный список, если с ним ничего не делали
             return evaluatedElements;
-        }
-
-        private bool IsFunctionDefined(string functionName)
-        {
-            // Ищем в текущих областях видимости
-            foreach (var scope in scopes)
-            {
-                if (scope.ContainsKey(functionName) && scope[functionName] is FuncNode)
-                    return true;
-            }
-            return false;
         }
 
         private object EvaluateEval(ListNode evalList)
@@ -308,6 +292,10 @@ namespace F_Interpretator
                 foreach (var expr in funcNode.Expressions)
                 {
                     result = Evaluate(expr);
+                    if (result is FuncNode funcNode1)
+                    {
+                        scopes.Peek()[funcNode1.FunctionName] = funcNode1;
+                    }
                 }
             }
             catch (ReturnException ret)
@@ -329,20 +317,17 @@ namespace F_Interpretator
                 return EvaluateBuiltInFunction(functionName, arguments);
             }
 
-            // Ищем функцию в областях видимости
-            foreach (var scope in scopes)
+            // Ищем функцию в текущей области видимости
+            if (scopes.Peek().ContainsKey(functionName))
             {
-                if (scope.ContainsKey(functionName))
+                var func = scopes.Peek()[functionName];
+                if (func is FuncNode funcNode)
                 {
-                    var func = scope[functionName];
-                    if (func is FuncNode funcNode)
-                    {
-                        return EvaluateUserFunction(funcNode, arguments);
-                    }
-                    else if (func is string builtInFunc && IsBuiltInFunction(builtInFunc))
-                    {
-                        return EvaluateBuiltInFunction(builtInFunc, arguments);
-                    }
+                    return EvaluateUserFunction(funcNode, arguments);
+                }
+                else if (func is string builtInFunc && IsBuiltInFunction(builtInFunc))
+                {
+                    return EvaluateBuiltInFunction(builtInFunc, arguments);
                 }
             }
 
@@ -411,6 +396,7 @@ namespace F_Interpretator
                 }
 
                 var bodyExpressions = funcList.Elements.Skip(3).ToList();
+                
                 return new FuncNode(funcName.Name, parameters, bodyExpressions);
             }
             throw new RuntimeException("func: invalid syntax");
@@ -463,7 +449,70 @@ namespace F_Interpretator
             }
 
             var body = lambdaList.Elements[2];
-            return new LambdaNode(parameters, body);
+
+            // Получаем текущую область видимости
+            var currentScope = scopes.Peek();
+
+            // Создаем копию тела с подстановкой значений
+            var substitutedBody = SubstituteVariables(body, parameters, currentScope);
+
+            return new LambdaNode(parameters, substitutedBody);
+        }
+
+        private ASTNode SubstituteVariables(ASTNode node, List<string> someParams, Dictionary<string, object> scope)
+        {
+            // Если это идентификатор И он не параметр лямбды И есть в scope
+            if (node is IdentifierNode idNode &&
+                !someParams.Contains(idNode.Name) &&
+                scope.ContainsKey(idNode.Name))
+            {
+                var value = scope[idNode.Name];
+
+                // Преобразуем значение обратно в AST узел
+                return value switch
+                {
+                    int i => new IntegerNode(i),
+                    double d => new RealNode(d),
+                    bool b => new BooleanNode(b),
+                    string s => new IdentifierNode(s),
+                    List<object> list => ConvertListToAST(list),
+                    FuncNode func => func, // Функции оставляем как есть
+                    LambdaNode lambda => lambda,
+                    _ => idNode // Если не знаем как преобразовать, оставляем как есть
+                };
+            }
+
+            // Если это список, рекурсивно обрабатываем элементы
+            if (node is ListNode listNode)
+            {
+                var newElements = new List<ASTNode>();
+                foreach (var elem in listNode.Elements)
+                {
+                    newElements.Add(SubstituteVariables(elem, someParams, scope));
+                }
+                return new ListNode(newElements);
+            }
+
+            // Для остальных типов узлов возвращаем как есть
+            return node;
+        }
+
+        private ListNode ConvertListToAST(List<object> list)
+        {
+            var elements = new List<ASTNode>();
+            foreach (var item in list)
+            {
+                elements.Add(item switch
+                {
+                    int i => new IntegerNode(i),
+                    double d => new RealNode(d),
+                    bool b => new BooleanNode(b),
+                    string s => new IdentifierNode(s),
+                    List<object> subList => ConvertListToAST(subList),
+                    _ => new IdentifierNode(item.ToString())
+                });
+            }
+            return new ListNode(elements);
         }
 
         private object EvaluateReturnList(ListNode returnList)
@@ -772,7 +821,7 @@ namespace F_Interpretator
                 scopes.Pop();
             }
 
-            return result;
+            return null;
         }
 
         private object EvaluateWhile(WhileNode whileNode)
@@ -805,7 +854,7 @@ namespace F_Interpretator
                 }
             }
 
-            return result;
+            return null;
         }
 
         private object EvaluateLambdaCall(LambdaCallNode lambdaCall)
@@ -837,15 +886,12 @@ namespace F_Interpretator
                 }
                 else 
                 {
-                    foreach (var scope in scopes)
-                    {
-                        if (scope.ContainsKey(returnedFuncName))
-                            return EvaluateUserFunction((FuncNode)scope[returnedFuncName], remainingArgs);
-                    }
+                    if (scopes.Peek().ContainsKey(returnedFuncName))
+                        return EvaluateUserFunction((FuncNode)scopes.Peek()[returnedFuncName], remainingArgs);
                 }
             }
 
-            return result;
+            return null;
         }
 
         private object EvaluateReturn(ReturnNode returnNode)

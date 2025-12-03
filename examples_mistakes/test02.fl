@@ -1,4 +1,0 @@
-(setq x 5)
-(isint x)
-(isatom x)
-(isatom 5)

@@ -1,3 +1,10 @@
-(func createadder (n) (lambda (x) (plus x n)))
-(setq add5 (createadder 5))
-(add5 10)
+(setq mylist (quote (a b c)))
+(head mylist)
+(tail mylist)
+
+(setq nested (quote ((a b) c)))
+(head nested)
+(head (head nested))
+
+(islist (quote (a b c)))
+(islist (quote ()))

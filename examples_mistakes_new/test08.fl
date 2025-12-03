@@ -1,3 +1,10 @@
-(func createadder (n) (lambda (x) (plus x n)))
-(setq add5 (createadder 5))
-(add5 10)
+(func map (f lst)
+  (cond (isnull lst) (quote ())
+        (cons (f (head lst)) (map f (tail lst)))))
+(map (lambda (x) (times x x)) (quote (1 2 3)))
+
+(func filter (pred lst)
+  (cond (isnull lst) (quote ())
+        (pred (head lst)) (cons (head lst) (filter pred (tail lst)))
+        (filter pred (tail lst))))
+(filter (lambda (x) (greater x 2)) (quote (1 2 3 4)))

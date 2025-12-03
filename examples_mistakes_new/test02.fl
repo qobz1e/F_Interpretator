@@ -1,5 +1,11 @@
-(func outer (x)
-  (func inner (y) (plus x y))
-  (return inner))
-(setq closure (outer 10))
-(closure 5)
+(func add (x y) (plus x y))
+(add 5 2)
+
+(func factorial (n)
+  (cond (less n 2) 1
+        (times n (factorial (minus n 1)))))
+(factorial 5)
+
+(func square (x) (times x x))
+(func sumofsquares (x y) (plus (square x) (square y)))
+(sumofsquares 3 4)
